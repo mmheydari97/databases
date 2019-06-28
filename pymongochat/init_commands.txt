@@ -1,0 +1,103 @@
+use mongochat
+
+db.createCollection("chats")
+db.createCollection("users")
+db.createCollection("channels")
+
+# new chat
+db.chats.insert({
+    "participant":["user1", "user2"],
+    "messages": [],
+	"counter": 0})
+
+# new message
+db.chats.update({
+    $and: 
+        [{"participant": "user1"},
+        {"participant": "user1"}]},
+        {$inc: {"counter": 1},
+         $addToSet: {"messages": {
+        "body": "good",
+        "sender": "user1",
+        "date": ISODate("2019-01-01")}}
+        })
+
+# new user
+db.users.insert({
+    "username": "mmh",
+    "password": "1234",
+    "contacts": [],
+    "channels": []
+    })
+
+# update info
+db.users.update({"username": "mmh"},{
+    $set: {"info": {
+        "firstName": "mohammad",
+        "lastName": "heydari",
+        "studentId": "9431306",
+        "stage": "Bsc",
+        "year": "1394"}
+    }})
+
+# new contact
+db.users.update({"username": "mmh"},
+    {
+    $addToSet:{"contacts": "rdl"}
+    })
+
+# unfriend
+db.users.update({"username": "mmh"},
+    {
+    $pull:{"contacts": "ali"}
+    })
+
+# leave
+db.users.update({"username": "mmh"},
+    {
+    $pull:{"channels": "news"}
+    })
+db.channels.update({"username": "news"},
+	{
+	$pull:{"members": "mmh"}
+	})
+
+# load messages
+db.chats.find({
+    $and: 
+        [{"participant": "user1"},
+        {"participant": "user1"}]},
+    {"messages":{ $slice: -3 }})
+
+# toatal messages
+db.chats.find({
+    $and: 
+        [{"participant": "user1"},
+        {"participant": "user1"}]},
+    {"counter": 1})
+
+# new channel in channels
+db.channels.insert({
+    "username": "db2019",
+	"admin": "user1"
+    "members": [],
+    "posts": []})
+
+# new post in channel
+db.channels.update({"username": "db2019"},{
+    $addToSet: {"posts":
+        {"body": "new post",
+         "date": ISODate("2019-02-01")}}})
+
+
+# new member in channel
+db.users.update({"username": "mmh"},
+    {
+    $addToSet:{"channels": "news"}
+    })
+db.channels.update({"username": "news"},
+	{
+	$addToSet:{"members": "mmh"}
+	})
+
+
