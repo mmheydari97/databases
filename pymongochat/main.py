@@ -112,14 +112,73 @@ with client:
                 "$pull": {"members": cur_user['username']}})
 
         elif command == "show entries":
-            contacts = db.users.find({"username": cur_user['username']}, {"contacts"})
-            for con in contacts:
-                pprint(con)
+            contacts = db.users.find({"username": cur_user['username']}, {"contacts"}).next()['contacts']
+            channels = db.users.find({"username": cur_user['username']}, {"channels"}).next()['channels']
+
+            contacts = sorted(contacts)
+            channels = sorted(channels)
+
+            print("contacts, sorted alphabetically", contacts)
+            print("channels, sorted alphabetically", channels)
+
         elif command == "load messages":
-            pass
+            print("enter 1 for contacts or 2 for channels")
+            option = input()
+            if option == "1":
+                print("contact username:")
+                con_l = input()
+                msg_l = db.chats.find({
+                    "$and": [{"participant": cur_user['username']},
+                             {"participant": con_l}]},
+                    {"messages": {"$slice": -3}}).next()['messages']
+                for ms in msg_l:
+                    print("{}:\n\t {} <<{}>>".format(ms['sender'], ms['body'], ms['date']))
+
+            else:
+                print("channel username:")
+                cha_l = input()
+
+                members = db.channels.find({"username": cha_l})
+                try:
+                    members = members.next()['members']
+                except StopIteration:
+                    print("channel has no members")
+                else:
+                    if cur_user['username'] in members:
+                        posts = db.channels.find({"username": cha_l},
+                                                 {"posts": {"$slice": -5}})
+
+                        try:
+                            posts = posts.next()['posts']
+                        except StopIteration:
+                            print("channel has no post")
+                        else:
+                            for post in posts:
+                                print("{} <<{}>>".format(post['body'], post['date']))
+
+                    else:
+                        print("you are not a member of this channel.")
+
         elif command == "total messages":
-            pass
+            print("username to show:")
+            user_t = input()
+            try:
+                counter = int(db.chats.find({
+                    "$and": [{"participant": cur_user['username']},
+                             {"participant": user_t}]},
+                    {"counter"}).next()['counter'])
+            except StopIteration:
+                print("something went wrong.")
+            else:
+                print("total number of messages between you and {} is: {}".format(user_t, counter))
+
         elif command == "new channel":
             pass
 
+        elif command == "send message":
+            pass
+        elif command == "publish post":
+            pass
+
+        print("enter next command or quit: ")
         command = input().lower()
