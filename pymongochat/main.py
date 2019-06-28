@@ -220,7 +220,26 @@ with client:
                 print("user is not in your contacts.")
 
         elif command == "publish post":
-            print("enter username of channel")
+            print("enter username of channel: ")
+            ch_usr = input()
+            try:
+                admin = db.channels.find({"username": ch_usr}, {"admin"}).next()['admin']
+            except StopIteration:
+                print("there is no such channel.")
+            else:
+                if admin == cur_user['username']:
+                    print("enter post body:")
+                    post_body = input()
+                    db.channels.update({"username": ch_usr}, {
+                        "$addToSet": {
+                            "posts": {
+                                "body": post_body,
+                                "date": datetime.now()
+                            }
+                        }
+                    })
+                else:
+                    print("you are not the admin.")
 
         print("enter next command or quit: ")
         command = input().lower()
