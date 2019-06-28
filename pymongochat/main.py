@@ -6,10 +6,6 @@ client = MongoClient("mongodb://localhost/")
 with client:
     db = client.mongochat
 
-    # print(db.collection_names())
-    # messages = db.chats.find()
-    # print(messages.next())
-
     print("already a member?")
     ans = input()
     if ans.lower() in ["yes", "y"]:
@@ -24,6 +20,7 @@ with client:
             }).next()
         except StopIteration:
             print("incorrect username or password.")
+            exit(1)
 
     elif ans.lower() in ["no", "n"]:
         print("enter a username to signup:")
@@ -31,15 +28,28 @@ with client:
         print("now enter password:")
         password = input()
 
-        a = db.users.insert({
-            "username": username,
-            "password": password,
-            "contacts": [],
-            "channels": []
-        })
-        cur_user = db.users.find({
-            '$and': [{"username": username}, {"password": password}]
-        }).next()
+        try:
+            cur_user = db.users.find({"username": username}).next()
+        except StopIteration:
+
+            a = db.users.insert({
+                "username": username,
+                "password": password,
+                "contacts": [],
+                "channels": []
+            })
+
+            cur_user = db.users.find({
+                '$and': [{"username": username}, {"password": password}]
+            }).next()
+
+        else:
+            print("username already exists.")
+            exit(1)
+
+    else:
+        print("wrong answer")
+        exit(1)
 
     print("enter next command or quit: ")
     command = input().lower()
@@ -69,15 +79,42 @@ with client:
                     "year": year}}})
 
         elif command == "add contact":
-            pass
+
+            print("username to add: ")
+            contact = input()
+
+            db.users.update({"username": cur_user['username']}, {
+                "$addToSet": {"contacts": contact}})
+
         elif command == "unfriend":
-            pass
-        elif command == "join channel":
-            pass
+            print("username to unfriend: ")
+            unfriend = input()
+
+            db.users.update({"username": cur_user['username']}, {
+                "$pull": {"contacts": unfriend}})
+
+        elif command == "join":
+            print("username to join: ")
+            join = input()
+            db.users.update({"username": cur_user['username']}, {
+                "$addToSet": {"channels": join}})
+
+            db.channels.update({"username": join}, {
+                "$addToSet": {"members": cur_user['username']}})
+
         elif command == "leave":
-            pass
+            print("username to leave: ")
+            join = input()
+            db.users.update({"username": cur_user['username']}, {
+                "$pull": {"channels": join}})
+
+            db.channels.update({"username": join}, {
+                "$pull": {"members": cur_user['username']}})
+
         elif command == "show entries":
-            pass
+            contacts = db.users.find({"username": cur_user['username']}, {"contacts"})
+            for con in contacts:
+                pprint(con)
         elif command == "load messages":
             pass
         elif command == "total messages":
