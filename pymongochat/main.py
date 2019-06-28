@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from pprint import pprint
+from datetime import datetime
 
 client = MongoClient("mongodb://localhost/")
 
@@ -128,8 +128,8 @@ with client:
                 print("contact username:")
                 con_l = input()
                 msg_l = db.chats.find({
-                    "$and": [{"participant": cur_user['username']},
-                             {"participant": con_l}]},
+                    "$and": [{"participants": cur_user['username']},
+                             {"participants": con_l}]},
                     {"messages": {"$slice": -3}}).next()['messages']
                 for ms in msg_l:
                     print("{}:\n\t {} <<{}>>".format(ms['sender'], ms['body'], ms['date']))
@@ -164,8 +164,8 @@ with client:
             user_t = input()
             try:
                 counter = int(db.chats.find({
-                    "$and": [{"participant": cur_user['username']},
-                             {"participant": user_t}]},
+                    "$and": [{"participants": cur_user['username']},
+                             {"participants": user_t}]},
                     {"counter"}).next()['counter'])
             except StopIteration:
                 print("something went wrong.")
@@ -173,12 +173,54 @@ with client:
                 print("total number of messages between you and {} is: {}".format(user_t, counter))
 
         elif command == "new channel":
-            pass
+            print("username for channel:")
+            u_channel = input()
+            all_chs = db.channels.find({}, {"username"})
+            for ch in all_chs:
+                if ch['username'] == u_channel:
+                    print("username already exists")
+            else:
+                db.channels.insert({
+                    "username": u_channel,
+                    "admin": cur_user['username'],
+                    "members": [],
+                    "posts": []})
+                print("channel created.")
 
         elif command == "send message":
-            pass
+            print("enter recipient:")
+            usr = input()
+            snd_contacts = db.users.find({"username": cur_user['username']}, {"contacts"}).next()['contacts']
+            if usr in snd_contacts:
+                print("enter your message")
+                ms_body = input()
+                try:
+                    db.chats.find({"$and": [
+                        {"participants": cur_user['username']},
+                        {"participants": usr}]}).next()
+                except StopIteration:
+                    db.chats.insert({
+                        "participants": [cur_user['username'], usr],
+                        "messages": [],
+                        "counter": 0})
+                finally:
+                    db.chats.update({
+                        "$and":
+                            [{"participants": cur_user['username']},
+                             {"participants": usr}]},
+                        {"$inc": {"counter": 1},
+                         "$addToSet": {"messages": {
+                             "body": ms_body,
+                             "sender": cur_user['username'],
+                             "date": datetime.now()}}
+                         })
+
+                    print("sent")
+            else:
+                print("user is not in your contacts.")
+
         elif command == "publish post":
-            pass
+            print("enter username of channel")
 
         print("enter next command or quit: ")
         command = input().lower()
