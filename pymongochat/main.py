@@ -83,10 +83,15 @@ with client:
 
             print("username to add: ")
             contact = input()
-
-            db.users.update({"username": cur_user['username']}, {
-                "$addToSet": {"contacts": contact}})
-            print("contact added.")
+            all_users = db.users.find({}, {"username"})
+            for nuser in all_users:
+                if nuser['username'] == contact:
+                    db.users.update({"username": cur_user['username']}, {
+                        "$addToSet": {"contacts": contact}})
+                    print("contact added.")
+                    break
+            else:
+                print("there is no such username.")
 
         elif command == "unfriend":
             print("username to unfriend: ")
@@ -191,11 +196,12 @@ with client:
             for ch in all_chs:
                 if ch['username'] == u_channel:
                     print("username already exists.")
+                    break
             else:
                 db.channels.insert({
                     "username": u_channel,
                     "admin": cur_user['username'],
-                    "members": [],
+                    "members": [cur_user['username']],
                     "posts": []})
                 print("channel created.")
 
