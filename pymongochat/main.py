@@ -136,12 +136,15 @@ with client:
             if option == "1":
                 print("contact username:")
                 con_l = input()
-                msg_l = db.chats.find({
-                    "$and": [{"participants": cur_user['username']},
-                             {"participants": con_l}]},
-                    {"messages": {"$slice": -3}}).next()['messages']
-                for ms in msg_l:
-                    print("{}:\n\t {} <<{}>>".format(ms['sender'], ms['body'], ms['date']))
+                try:
+                    msg_l = db.chats.find({
+                        "$and": [{"participants": cur_user['username']},
+                                 {"participants": con_l}]},
+                        {"messages": {"$slice": -3}}).next()['messages']
+                    for ms in msg_l:
+                        print("{}:\n\t {} <<{}>>".format(ms['sender'], ms['body'], ms['date']))
+                except StopIteration:
+                    print("no message found.")
 
             else:
                 print("channel username:")
