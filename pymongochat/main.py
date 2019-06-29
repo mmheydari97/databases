@@ -48,7 +48,7 @@ with client:
             exit(1)
 
     else:
-        print("wrong answer")
+        print("wrong answer.")
         exit(1)
 
     print("enter next command or quit: ")
@@ -77,6 +77,7 @@ with client:
                     "studentId": sid,
                     "stage": stage,
                     "year": year}}})
+            print("info updated.")
 
         elif command == "add contact":
 
@@ -85,6 +86,7 @@ with client:
 
             db.users.update({"username": cur_user['username']}, {
                 "$addToSet": {"contacts": contact}})
+            print("contact added.")
 
         elif command == "unfriend":
             print("username to unfriend: ")
@@ -92,18 +94,25 @@ with client:
 
             db.users.update({"username": cur_user['username']}, {
                 "$pull": {"contacts": unfriend}})
+            print("contact deleted.")
 
         elif command == "join":
             print("username to join: ")
             join = input()
-            db.users.update({"username": cur_user['username']}, {
-                "$addToSet": {"channels": join}})
+            chs = db.channels.find({}, {"username"})
+            for uch in chs:
+                if uch['username'] == join:
+                    db.users.update({"username": cur_user['username']}, {
+                        "$addToSet": {"channels": join}})
 
-            db.channels.update({"username": join}, {
-                "$addToSet": {"members": cur_user['username']}})
+                    db.channels.update({"username": join}, {
+                        "$addToSet": {"members": cur_user['username']}})
+                    break
+            else:
+                print("there is no such channel.")
 
         elif command == "leave":
-            print("username to leave: ")
+            print("channel username to leave: ")
             join = input()
             db.users.update({"username": cur_user['username']}, {
                 "$pull": {"channels": join}})
@@ -118,11 +127,11 @@ with client:
             contacts = sorted(contacts)
             channels = sorted(channels)
 
-            print("contacts, sorted alphabetically", contacts)
-            print("channels, sorted alphabetically", channels)
+            print("contacts, sorted alphabetically: ", contacts)
+            print("channels, sorted alphabetically: ", channels)
 
         elif command == "load messages":
-            print("enter 1 for contacts or 2 for channels")
+            print("enter 1 for contacts or 2 for channels:")
             option = input()
             if option == "1":
                 print("contact username:")
@@ -142,7 +151,7 @@ with client:
                 try:
                     members = members.next()['members']
                 except StopIteration:
-                    print("channel has no members")
+                    print("channel has no members.")
                 else:
                     if cur_user['username'] in members:
                         posts = db.channels.find({"username": cha_l},
@@ -151,7 +160,7 @@ with client:
                         try:
                             posts = posts.next()['posts']
                         except StopIteration:
-                            print("channel has no post")
+                            print("channel has no post.")
                         else:
                             for post in posts:
                                 print("{} <<{}>>".format(post['body'], post['date']))
@@ -170,7 +179,7 @@ with client:
             except StopIteration:
                 print("something went wrong.")
             else:
-                print("total number of messages between you and {} is: {}".format(user_t, counter))
+                print("total number of messages between you and {} is: {}.".format(user_t, counter))
 
         elif command == "new channel":
             print("username for channel:")
@@ -178,7 +187,7 @@ with client:
             all_chs = db.channels.find({}, {"username"})
             for ch in all_chs:
                 if ch['username'] == u_channel:
-                    print("username already exists")
+                    print("username already exists.")
             else:
                 db.channels.insert({
                     "username": u_channel,
@@ -192,7 +201,7 @@ with client:
             usr = input()
             snd_contacts = db.users.find({"username": cur_user['username']}, {"contacts"}).next()['contacts']
             if usr in snd_contacts:
-                print("enter your message")
+                print("enter your message: ")
                 ms_body = input()
                 try:
                     db.chats.find({"$and": [
@@ -215,7 +224,7 @@ with client:
                              "date": datetime.now()}}
                          })
 
-                    print("sent")
+                    print("sent.")
             else:
                 print("user is not in your contacts.")
 
