@@ -81,7 +81,6 @@ insert into Role values(5, 3, 'pay');
 insert into Role values(6, 6, 'owner');
 insert into Role values(6, 6, 'sign');
 
-
 select * from accessLogs;
 
 delete from Role
@@ -113,9 +112,6 @@ update Payment Set state = 1 where paymentNumber = 1001; -- ok
 select * from Bill;
 select * from Accounts;
 delete from Signatures where (customerNumber, paymentNumber) = (1, 1001); -- impossible payment is done
-
-
-
 
 insert into Payment(paymentNumber, note, creatorNumber, sourceAccountNumber) values(1002, 'note 1002', 3, 2);
 

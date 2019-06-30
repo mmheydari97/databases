@@ -1,6 +1,4 @@
--- use mysql; 
--- CREATE DATABASE test; 
--- use test; 
+use db2019;
 
 DELIMITER $$
 create trigger grant_access_log after insert on Role

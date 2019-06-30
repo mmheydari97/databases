@@ -12,7 +12,6 @@ drop table IF EXISTS Phone;
 drop table IF EXISTS Address;
 drop table IF EXISTS Customer;
 
-
 drop table IF EXISTS Signatures_deletion_backup;
 drop table IF EXISTS Transactions_deletion_backup;
 drop table IF EXISTS Payment_deletion_backup;
@@ -199,9 +198,14 @@ Create Table accessLogs(
 );
 
 
-Create table accountslogs(
+create table accountslogs(
 	AccountNumber int,
     logtype varchar(32),
     logTime timestamp,
     check(logtype in ('creation', 'add sign', 'remove sign', 'payment'))
 );
+
+
+
+
+
